@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local Error Modeling for Interactive Visualization of Large Scientific Data</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #111827;
+      --panel-2: #0f172a;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #60a5fa;
+      --accent-2: #22c55e;
+      --border: rgba(148,163,184,0.18);
+      --shadow: 0 20px 40px rgba(0,0,0,0.28);
+      --maxw: 1200px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(96,165,250,0.14), transparent 24%),
+        radial-gradient(circle at top left, rgba(34,197,94,0.08), transparent 18%),
+        linear-gradient(180deg, #07101d 0%, #0b1220 48%, #0a0f1a 100%);
+      line-height: 1.55;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container {
+      width: min(var(--maxw), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 28px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(96,165,250,0.12);
+      border: 1px solid rgba(96,165,250,0.22);
+      color: #bfdbfe;
+      font-size: 0.86rem;
+      letter-spacing: 0.02em;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1.08;
+      margin: 0 0 16px;
+      max-width: 980px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.06rem;
+      max-width: 880px;
+      margin-bottom: 24px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 28px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, rgba(96,165,250,0.22), rgba(37,99,235,0.20));
+      border-color: rgba(96,165,250,0.35);
+    }
+
+    .btn.secondary {
+      background: rgba(255,255,255,0.03);
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+      background: rgba(7, 16, 29, 0.72);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 60px;
+    }
+
+    .brand {
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 0.96rem;
+    }
+
+    section {
+      padding: 42px 0;
+    }
+
+    h2 {
+      font-size: clamp(1.35rem, 2.5vw, 2rem);
+      margin: 0 0 16px;
+    }
+
+    .section-intro {
+      color: var(--muted);
+      max-width: 860px;
+      margin-bottom: 22px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    .card p, .card li {
+      color: #d5dde8;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .embed-frame,
+    .video-frame,
+    .placeholder {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+    }
+
+    .embed-frame {
+      height: 72vh;
+      min-height: 520px;
+    }
+
+    .video-frame {
+      display: block;
+      background: #000;
+      max-height: 72vh;
+    }
+
+    .placeholder {
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24px;
+      background:
+        linear-gradient(135deg, rgba(96,165,250,0.08), rgba(34,197,94,0.05)),
+        rgba(255,255,255,0.02);
+    }
+
+    .placeholder .tag {
+      display: inline-block;
+      align-self: flex-start;
+      margin-bottom: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      color: #cbd5e1;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .kpi {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .kpi .label {
+      font-size: 0.84rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .kpi .value {
+      font-size: 1.18rem;
+      font-weight: 700;
+    }
+
+    footer {
+      padding: 40px 0 70px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      .grid-2, .grid-3, .kpis { grid-template-columns: 1fr; }
+      .embed-frame { height: 60vh; min-height: 420px; }
+      .nav-inner { padding: 8px 0; align-items: flex-start; }
+      .nav-links { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container nav-inner">
+      <div class="brand">Error-Driven Visualization Project</div>
+      <div class="nav-links">
+        <a href="#paper">Paper</a>
+        <a href="#video">Video</a>
+        <a href="#figures">Figures</a>
+        <a href="#tables">Tables</a>
+        <a href="#stats">Statistics</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container">
+      <div class="eyebrow">EuroVis 2026 Short Paper Companion</div>
+      <h1>Local Error Modeling for Interactive Visualization of Large Scientific Data</h1>
+      <p class="subtitle">
+        A project page for the short paper, demo video, and expanded supplementary materials,
+        including additional figures, tables, and quantitative summaries for error-aware exploration.
+      </p>
+      <div class="meta">
+        <span><strong>Authors:</strong> C. Xiong and R. D. Bergeron</span>
+        <span>•</span>
+        <span><strong>Affiliation:</strong> University of New Hampshire</span>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="Can_Bergeron_EuroVis_short_2026.pdf" target="_blank" rel="noopener">Open Paper PDF</a>
+        <a class="btn secondary" href="ErrorDrivenInteractiveExplore.MP4" target="_blank" rel="noopener">Open Demo Video</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="overview">
+      <div class="container">
+        <h2>Project Overview</h2>
+        <p class="section-intro">
+          This page hosts the short paper, a companion video, and reserved space for broader evaluation materials.
+          The supplemental sections are structured so additional figures, comparison tables, and extended dataset-specific
+          statistics can be inserted without redesigning the page.
+        </p>
+        <div class="kpis">
+          <div class="kpi"><div class="label">Paper</div><div class="value">Embedded PDF</div></div>
+          <div class="kpi"><div class="label">Demo</div><div class="value">Embedded MP4</div></div>
+          <div class="kpi"><div class="label">Supplement</div><div class="value">Figure Placeholders</div></div>
+          <div class="kpi"><div class="label">Evaluation</div><div class="value">Table + Stats Slots</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="paper">
+      <div class="container">
+        <h2>Short Paper</h2>
+        <p class="section-intro">
+          Read the full short paper directly below, or open it in a separate tab for easier navigation and citation.
+        </p>
+        <div class="card">
+          <iframe class="embed-frame" src="Can_Bergeron_EuroVis_short_2026.pdf" title="Short paper PDF"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section id="video">
+      <div class="container">
+        <h2>Companion Video</h2>
+        <p class="section-intro">
+          The video can be used alongside the paper to illustrate the interactive exploration workflow,
+          local error views, and refinement behavior.
+        </p>
+        <div class="card">
+          <video class="video-frame" controls playsinline preload="metadata" width="100%">
+            <source src="ErrorDrivenInteractiveExplore.MP4" type="video/mp4" />
+            Your browser does not support the embedded video element.
+          </video>
+        </div>
+      </div>
+    </section>
+
+    <section id="figures">
+      <div class="container">
+        <h2>Expanded Figures</h2>
+        <p class="section-intro">
+          Reserved space for higher-resolution panels, additional comparison figures, and detailed visual examples
+          that extend beyond the page limits of the short paper.
+        </p>
+        <div class="grid grid-2">
+          <div class="placeholder">
+            <span class="tag">Placeholder</span>
+            <h3>Figure Set A — Adaptive Reconstruction Comparisons</h3>
+            <p>Insert larger versions of adaptive visualization figures, side-by-side data/error views, and zoomed ROI comparisons.</p>
+          </div>
+          <div class="placeholder">
+            <span class="tag">Placeholder</span>
+            <h3>Figure Set B — Tolerance-Driven Failure Maps</h3>
+            <p>Insert threshold sweeps, failure-only renderings, pass-only views, and linked error overlays for selected datasets.</p>
+          </div>
+          <div class="placeholder">
+            <span class="tag">Placeholder</span>
+            <h3>Figure Set C — Solar Wind Dataset</h3>
+            <p>Insert expanded solar wind data views, matched local error fields, and ROI refinement examples.</p>
+          </div>
+          <div class="placeholder">
+            <span class="tag">Placeholder</span>
+            <h3>Figure Set D — JH Turbulence Dataset</h3>
+            <p>Insert turbulence isosurfaces, localized error maps, and adaptive refinement progressions at multiple tolerances.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tables">
+      <div class="container">
+        <h2>Extended Tables</h2>
+        <p class="section-intro">
+          Placeholder sections for complete comparison tables, including ROI pass rates, overall pass rates,
+          compression trade-offs, and adaptive performance summaries.
+        </p>
+        <div class="grid grid-2">
+          <div class="placeholder">
+            <span class="tag">Placeholder</span>
+            <h3>Table Group 1 — ROI Pass Rate Comparisons</h3>
+            <p>Add dataset-specific ROI evaluations for solar wind and JH turbulence, including thresholded pass-rate summaries for uniform and adaptive settings.</p>
+          </div>
+          <div class="placeholder">
+            <span class="tag">Placeholder</span>
+            <h3>Table Group 2 — Overall Local Error Pass Rates</h3>
+            <p>Add full-domain pass-rate tables, localized fidelity thresholds, and Top10% error-share summaries.</p>
+          </div>
+          <div class="placeholder">
+            <span class="tag">Placeholder</span>
+            <h3>Table Group 3 — Compression and Storage Summaries</h3>
+            <p>Add payload-only compression ratios, reduced data sizes, and compact error-metadata overhead summaries.</p>
+          </div>
+          <div class="placeholder">
+            <span class="tag">Placeholder</span>
+            <h3>Table Group 4 — FPS and Responsiveness</h3>
+            <p>Add rendering throughput comparisons for original, reduced, and adaptive configurations across datasets.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="stats">
+      <div class="container">
+        <h2>Detailed Statistics</h2>
+        <p class="section-intro">
+          Dedicated placeholders for quantitative summaries that support deeper analysis beyond the short paper.
+        </p>
+        <div class="grid grid-3">
+          <div class="placeholder">
+            <span class="tag">Placeholder</span>
+            <h3>Hotspot Metrics</h3>
+            <p>Top10% error share, MaxLocal/G, hotspot percentages, and related spatial concentration summaries.</p>
+          </div>
+          <div class="placeholder">
+            <span class="tag">Placeholder</span>
+            <h3>Threshold Sweeps</h3>
+            <p>Per-threshold pass-rate trends, adaptive selection thresholds, and error-distribution transitions.</p>
+          </div>
+          <div class="placeholder">
+            <span class="tag">Placeholder</span>
+            <h3>Dataset-Specific Notes</h3>
+            <p>Expanded methodology notes, configuration details, and reproducibility-oriented summaries for each dataset.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>
+        This project page is designed as a compact, professional companion site for the paper and video, with reserved sections for future supplementary material.
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
